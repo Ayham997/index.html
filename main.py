@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import os
@@ -27,18 +28,17 @@ def get_client() -> genai.Client:
     return genai.Client(api_key=api_key)
 
 def generate_with_retry(client: genai.Client, contents, model_name: str = "gemini-3.8-flash", system_instruction: str | None = None, temperature: float = 0.7) -> str:
-    delay = 2
+    delay = 1
     config = types.GenerateContentConfig(temperature=temperature)
     if system_instruction:
         config.system_instruction = system_instruction
-    for attempt in range(4):
+    for attempt in range(2):
         try:
             response = client.models.generate_content(model=model_name, contents=contents, config=config)
             return (response.text or "").strip()
         except Exception as e:
-            if any(c in str(e) for c in ["503", "429", "RESOURCE_EXHAUSTED", "UNAVAILABLE"]) and attempt < 3:
+            if any(c in str(e) for c in ["503", "429", "RESOURCE_EXHAUSTED", "UNAVAILABLE"]) and attempt == 0:
                 time.sleep(delay)
-                delay *= 2
                 continue
             raise HTTPException(status_code=502, detail=f"Gemini API error: {e}")
     raise HTTPException(status_code=502, detail="Gemini API temporarily unavailable.")
@@ -90,7 +90,7 @@ async def chat_endpoint(
     audio_b64 = None
     if voice_output and answer_text:
         try:
-            audio_b64 = await synthesize_male_speech_base64(answer_text)
+            audio_b64 = await asyncio.wait_for(synthesize_male_speech_base64(answer_text), timeout=5.0)
         except Exception:
             audio_b64 = None
     return {"transcript": user_text, "answer": answer_text, "audio_base64": audio_b64, "audio_mime": "audio/mp3"}
