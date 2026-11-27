@@ -12,13 +12,13 @@ from fastapi.responses import FileResponse
 from google import genai
 from google.genai import types
 
-app = FastAPI(title="Kallal AI")
+app = FastAPI(title="Ayzo.ai")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 BASE_DIR = Path(__file__).resolve().parent
 MALE_VOICE = "en-US-AndrewNeural"
 
-SYSTEM_PROMPT = """You are Kallal, a futuristic, calm, and highly intelligent AI assistant.
+SYSTEM_PROMPT = """You are Ayzo.ai, a futuristic, calm, and highly intelligent AI assistant.
 Keep your answers clear, structured, and natural to both read on screen and hear spoken aloud."""
 
 def get_client() -> genai.Client:
